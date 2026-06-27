@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Psi Ψ - Smart Tabs Privacy Agent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #0B0F19; color: #E5E7EB; font-family: 'Segoe UI', Roboto, sans-serif; }
+        .glass { background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .agent-gradient { background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%); }
+    </style>
+</head>
+<body class="min-h-screen p-6 md:p-12">
+
+    <div class="max-w-7xl mx-auto">
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 pb-6 border-b border-gray-800">
+            <div>
+                <h1 class="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-violet-400 mb-2">
+                    <i class="fa-solid fa-brain mr-2 text-blue-500"></i>Psi Ψ Dashboard
+                </h1>
+                <p class="text-sm text-gray-400">Localized AI Orchestration and Zero-Data Leakage Environment Management Suite.</p>
+            </div>
+            <div class="mt-4 md:mt-0 flex items-center space-x-3 bg-gray-900/60 px-4 py-2 rounded-xl border border-gray-800">
+                <span class="relative flex h-3 w-3">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                </span>
+                <span class="text-xs font-semibold text-gray-300"> Core Backend Connected</span>
+            </div>
+        </header>
+
+        <main>
+            <div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-200">Secure Vault Storage</h2>
+                    <p class="text-xs text-gray-400">Review, query, and reinstantiate isolated contextual runtime histories.</p>
+                </div>
+                <div class="w-full md:w-96 relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-500">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input 
+                        type="text" 
+                        id="searchQuery" 
+                        oninput="loadArchive()"
+                        placeholder="Search semantic summaries..." 
+                        class="w-full bg-gray-950/50 border border-gray-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-gray-300 focus:outline-none focus:border-blue-500 transition-colors"
+                    >
+                </div>
+            </div>
+
+            <div id="archiveContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            </div>
+        </main>
+    </div>
+
+    <script>
+        async function openInVSCode(localPath) {
+            try {
+                const response = await fetch(`http://127.0.0.1:8000/open-in-vscode?path=${encodeURIComponent(localPath)}`);
+                const data = await response.json();
+                console.log("System Action Log:", data);
+            } catch (error) {
+                console.error("Failed to execute local system workspace command via server backend.", error);
+            }
+        }
+
+        async function loadArchive() {
+            const query = document.getElementById('searchQuery').value;
+            const container = document.getElementById('archiveContainer');
+            
+            try {
+                const response = await fetch(`http://127.0.0.1:8000/search-tabs?query=${encodeURIComponent(query)}`);
+                const result = await response.json();
+                
+                container.innerHTML = '';
+                
+                if (result.data && result.data.length > 0) {
+                    const sortedRecords = result.data.slice().reverse();
+
+                    sortedRecords.forEach((item) => {
+                        const estimatedRam = Math.floor(32 + (item.summary.length % 28));
+
+                        let contextTag = "General Asset";
+                        let tagColor = "from-gray-500 to-slate-600";
+                        const textData = (item.title + " " + item.summary).toLowerCase();
+
+                        if (textData.includes("wiki") || textData.includes("science") || textData.includes("edu") || textData.includes("research")) {
+                            contextTag = "Academic Research";
+                            tagColor = "from-blue-600 to-indigo-600";
+                        } else if (textData.includes("github") || textData.includes("code") || textData.includes("stack") || textData.includes("api") || textData.includes("python")) {
+                            contextTag = "Development Asset";
+                            tagColor = "from-purple-600 to-pink-600";
+                        } else if (textData.includes("news") || textData.includes("article") || textData.includes("report")) {
+                            contextTag = "Articles & News";
+                            tagColor = "from-amber-600 to-orange-600";
+                        }
+
+                        const lowerUrl = item.url.toLowerCase();
+                        let actionMarkup = "";
+
+                        if (item.url.startsWith('/') || item.url.includes(':/') || lowerUrl.includes('docs/') || item.url.startsWith('file:///')) {
+                            actionMarkup = `
+                                <button 
+                                    onclick="openInVSCode('${item.url}')"
+                                    class="w-full text-center bg-gray-800 hover:bg-gradient-to-r hover:from-blue-600 hover:to-violet-600 text-gray-300 hover:text-white font-bold py-2 px-4 rounded-xl text-xs tracking-wide transition-all duration-300 border border-gray-700/60 hover:border-transparent flex items-center justify-center gap-2"
+                                >
+                                    <i class="fa-solid fa-code"></i> Open in VS Code Workspace
+                                </button>
+                            `;
+                        } else {
+                            actionMarkup = `
+                                <a 
+                                    href="${item.url}"
+                                    target="_blank"
+                                    class="w-full text-center bg-gray-800 hover:bg-gradient-to-r hover:from-blue-600 hover:to-violet-600 text-gray-300 hover:text-white font-bold py-2 px-4 rounded-xl text-xs tracking-wide transition-all duration-300 border border-gray-700/60 hover:border-transparent flex items-center justify-center gap-2 no-underline"
+                                >
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Resume Context Work
+                                </a>
+                            `;
+                        }
+
+                        const cardHTML = `
+                            <div class="p-6 bg-gray-900/40 rounded-2xl border border-gray-800/80 hover:border-blue-500/40 transition-all duration-300 flex flex-col justify-between shadow-xl backdrop-blur-md">
+                                <div>
+                                    <div class="flex justify-between items-center mb-4">
+                                        <span class="text-[10px] font-bold tracking-wider uppercase bg-gradient-to-r ${tagColor} text-white px-2.5 py-1 rounded-md shadow-sm">
+                                            <i class="fa-solid fa-tags mr-1"></i>${contextTag}
+                                        </span>
+                                        <span class="text-xs font-semibold text-emerald-400 bg-emerald-950/30 border border-emerald-900/50 px-2 py-0.5 rounded-full">
+                                            <i class="fa-solid fa-microchip mr-1"></i>Optimized: ~${estimatedRam}MB RAM
+                                        </span>
+                                    </div>
+                                    
+                                    <h3 class="text-md font-bold text-blue-400 truncate mb-2" title="${item.title}">
+                                        ${item.title}
+                                    </h3>
+                                    
+                                    <p class="text-xs text-gray-500 font-mono truncate mb-4">
+                                        <i class="fa-solid fa-link mr-1 text-gray-600"></i>${item.url}
+                                    </p>
+                                    
+                                    <div class="bg-gray-950/60 p-4 rounded-xl border border-gray-800/60 mb-4">
+                                        <p class="text-xs text-gray-300 leading-relaxed">
+                                            <span class="text-blue-400 font-bold"><i class="fa-solid fa-robot mr-1"></i>AI Summary:</span> ${item.summary}
+                                        </p>
+                                    </div>
+                                </div>
+                                ${actionMarkup}
+                            </div>
+                        `;
+                        
+                        container.innerHTML += cardHTML;
+                    });
+                } else {
+                    container.innerHTML = `
+                        <div class="col-span-full p-8 bg-gray-950/40 border border-gray-800 rounded-2xl text-center">
+                            <span class="text-sm font-bold text-yellow-500 block mb-2">
+                                <i class="fa-solid fa-circle-exclamation mr-2"></i>Repository Vault Empty
+                            </span>
+                            <p class="text-xs text-gray-400 max-w-md mx-auto">The pipeline architecture is active, but no tab contexts are stored. Trigger your browser extension to archive pages live.</p>
+                        </div>
+                    `;
+                }
+            } catch (e) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center text-red-400 py-12 bg-red-950/10 border border-red-900/30 rounded-2xl">
+                        <i class="fa-solid fa-triangle-exclamation text-3xl mb-3 block"></i>
+                        <span class="font-bold text-sm">Failed to sync system database infrastructure.</span><br>
+                        <span class="text-xs text-gray-500 mt-1 block">Ensure your localized Python FastAPI service runtime is active on port 8000.</span>
+                    </div>
+                `;
+            }
+        }
+
+        window.onload = loadArchive;
+    </script>
+</body>
+</html>
